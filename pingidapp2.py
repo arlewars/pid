@@ -121,24 +121,34 @@ def offline_pairing(username, sms):
     return response_body
 
 
+def display_result(response):
+    for widget in result_frame.winfo_children():
+        widget.destroy()
+
+    if isinstance(response, dict) and 'userDetails' in response:
+        user_details = response['userDetails']
+        for i, (key, value) in enumerate(user_details.items()):
+            tk.Label(result_frame, text=key).grid(row=i, column=0, padx=10, pady=5, sticky=tk.W)
+            tk.Label(result_frame, text=value).grid(row=i, column=1, padx=10, pady=5, sticky=tk.W)
+    else:
+        tk.Label(result_frame, text="No user details found").grid(row=0, column=0, padx=10, pady=10)
+
 def get_user_callback():
     username = username_entry.get()
     response = get_user(username)
-    result_text.set(response)
-
+    display_result(response)
 
 def add_user_callback():
     username = username_entry.get()
     activate_user = activate_user_var.get()
     response = add_user(username, activate_user)
-    result_text.set(response)
-
+    display_result(response)
 
 def offline_pairing_callback():
     username = username_entry.get()
     sms = sms_entry.get()
     response = offline_pairing(username, sms)
-    result_text.set(response)
+    display_result(response)
 
 
 # Create the main window
