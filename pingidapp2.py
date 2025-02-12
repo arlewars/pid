@@ -125,13 +125,30 @@ def display_result(response):
     for widget in result_frame.winfo_children():
         widget.destroy()
 
+    canvas = tk.Canvas(result_frame)
+    scrollbar = tk.Scrollbar(result_frame, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas)
+
+    scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(
+            scrollregion=canvas.bbox("all")
+        )
+    )
+
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+
     if isinstance(response, dict) and 'userDetails' in response:
         user_details = response['userDetails']
         for i, (key, value) in enumerate(user_details.items()):
-            tk.Label(result_frame, text=key).grid(row=i, column=0, padx=10, pady=5, sticky=tk.W)
-            tk.Label(result_frame, text=value).grid(row=i, column=1, padx=10, pady=5, sticky=tk.W)
+            tk.Label(scrollable_frame, text=key).grid(row=i, column=0, padx=10, pady=5, sticky=tk.W)
+            tk.Label(scrollable_frame, text=value).grid(row=i, column=1, padx=10, pady=5, sticky=tk.W)
     else:
-        tk.Label(result_frame, text="No user details found").grid(row=0, column=0, padx=10, pady=10)
+        tk.Label(scrollable_frame, text="No user details found").grid(row=0, column=0, padx=10, pady=10)
+
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
 
 def get_user_callback():
     username = username_entry.get()
@@ -154,6 +171,7 @@ def offline_pairing_callback():
 # Create the main window
 root = tk.Tk()
 root.title("PingID Tkinter App")
+root.geometry("600x400")  # Set initial window size
 
 # Create a menu
 menu = tk.Menu(root)
@@ -168,13 +186,13 @@ pingid_menu.add_command(label="Offline Pairing", command=offline_pairing_callbac
 
 # Create frames
 input_frame = tk.Frame(root)
-input_frame.grid(row=0, column=0, padx=10, pady=10)
+input_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
 action_frame = tk.Frame(root)
-action_frame.grid(row=0, column=1, padx=10, pady=10)
+action_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
 result_frame = tk.Frame(root)
-result_frame.grid(row=2, columnspan=2, padx=10, pady=10)
+result_frame.grid(row=2, columnspan=2, padx=10, pady=10, sticky="nsew")
 
 # Add labels and entry fields for user data in input frame
 tk.Label(input_frame, text="Username:").grid(row=0, column=0, sticky=tk.W, padx=10, pady=10)
@@ -190,7 +208,7 @@ tk.Checkbutton(input_frame, text="Activate User", variable=activate_user_var).gr
 
 # Add environment selection frame
 env_frame = tk.Frame(root)
-env_frame.grid(row=1, columnspan=2, padx=10, pady=10)
+env_frame.grid(row=1, columnspan=2, padx=10, pady=10, sticky="nsew")
 
 selected_properties_file = tk.StringVar(value=PROPERTIES_FILES['Production'])
 
@@ -204,8 +222,15 @@ tk.Button(action_frame, text="Add User", command=add_user_callback).grid(row=5, 
 tk.Button(action_frame, text="Offline Pairing", command=offline_pairing_callback).grid(row=6, column=0, padx=2, pady=2)
 
 # Add a results frame
-result_text = tk.StringVar()
-tk.Label(result_frame, textvariable=result_text, wraplength=400).grid(row=0, column=0, padx=10, pady=10)
+result_frame = tk.Frame(root)
+result_frame.grid(row=2, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+# Make the frames resizable
+root.grid_rowconfigure(0, weight=1)
+root.grid_rowconfigure(1, weight=1)
+root.grid_rowconfigure(2, weight=1)
+root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(1, weight=1)
 
 # Start the application
 root.mainloop()
